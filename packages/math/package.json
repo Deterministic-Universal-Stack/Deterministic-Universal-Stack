@@ -1,0 +1,7 @@
+{
+  "name": "@dus/math",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/packages/math/src/index.js",
+  "types": "dist/packages/math/src/index.d.ts"
+}

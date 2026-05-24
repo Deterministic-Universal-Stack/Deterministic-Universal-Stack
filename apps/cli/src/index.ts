@@ -1,0 +1,57 @@
+import { DUS, canonicalHash, stringifyWithBigInt, type Reducer } from "@dus/core";
+import { FileSystemEventStore } from "@dus/storage";
+import path from "node:path";
+
+interface StateValue {
+  kv: Record<string, unknown>;
+}
+
+const reducer: Reducer<StateValue> = (state, event) => {
+  const payload = event.payload as Record<string, unknown>;
+  const kv = { ...state.value.kv };
+  if (event.type === "set") {
+    kv[String(payload.key)] = payload.value;
+  }
+  return {
+    value: { kv },
+    hash: canonicalHash({ kv }),
+    eventCount: state.eventCount + 1n
+  };
+};
+
+async function main(): Promise<void> {
+  const command = process.argv[2] ?? "help";
+  const runtime = new DUS<StateValue>("cli-node", reducer, {
+    reducerVersion: "dus-cli@1",
+    initialValue: { kv: {} }
+  });
+
+  runtime.emit("set", { key: "system", value: "deterministic" }, { timestamp: 1 });
+  runtime.emit("set", { key: "replication", value: "causal" }, { timestamp: 2 });
+
+  if (command === "replay") {
+    console.log(stringifyWithBigInt(runtime.replay(), 2));
+    return;
+  }
+
+  if (command === "snapshot") {
+    console.log(stringifyWithBigInt(runtime.snapshot(), 2));
+    return;
+  }
+
+  if (command === "persist") {
+    const store = new FileSystemEventStore({
+      rootDir: path.join(process.cwd(), ".tmp")
+    });
+    const log = await store.saveLog("cli-demo", "dus-cli@1", runtime.getEvents());
+    console.log(stringifyWithBigInt(log, 2));
+    return;
+  }
+
+  console.log("Usage: npm run replay | tsx apps/cli/src/index.ts [replay|snapshot|persist]");
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

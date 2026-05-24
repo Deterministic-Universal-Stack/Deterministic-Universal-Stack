@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@dus/core": [
+        "packages/core/src/index.ts"
+      ],
+      "@dus/math": [
+        "packages/math/src/index.ts"
+      ],
+      "@dus/network": [
+        "packages/network/src/index.ts"
+      ],
+      "@dus/runtime": [
+        "packages/runtime/src/index.ts"
+      ],
+      "@dus/storage": [
+        "packages/storage/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "packages/**/*.ts",
+    "apps/**/*.ts",
+    "tests/**/*.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
+}

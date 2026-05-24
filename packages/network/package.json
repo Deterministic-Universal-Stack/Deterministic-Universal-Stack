@@ -1,0 +1,7 @@
+{
+  "name": "@dus/network",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/packages/network/src/index.js",
+  "types": "dist/packages/network/src/index.d.ts"
+}

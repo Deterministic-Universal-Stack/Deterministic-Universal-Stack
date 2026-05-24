@@ -1,0 +1,7 @@
+{
+  "name": "@dus/runtime",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/packages/runtime/src/index.js",
+  "types": "dist/packages/runtime/src/index.d.ts"
+}

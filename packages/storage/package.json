@@ -1,0 +1,7 @@
+{
+  "name": "@dus/storage",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/packages/storage/src/index.js",
+  "types": "dist/packages/storage/src/index.d.ts"
+}

@@ -1,0 +1,36 @@
+{
+  "name": "deterministic-universal-stack",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Deterministic Universal Stack: a replayable, causally consistent, event-derived substrate for decentralized applications.",
+  "author": "James Chapman <xhecarpenxer@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Deterministic-Universal-Stack/Deterministic-Universal-Stack.git"
+  },
+  "homepage": "https://github.com/Deterministic-Universal-Stack/Deterministic-Universal-Stack",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage .tmp packages/*/dist apps/*/dist",
+    "demo": "tsx apps/playground/src/index.ts",
+    "replay": "tsx apps/cli/src/index.ts replay",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "verify": "npm run typecheck && npm run test"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}
