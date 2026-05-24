@@ -1,0 +1,7 @@
+{
+  "name": "@dus/navigator",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/packages/navigator/src/index.js",
+  "types": "dist/packages/navigator/src/index.d.ts"
+}

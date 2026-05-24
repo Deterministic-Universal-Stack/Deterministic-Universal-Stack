@@ -1,0 +1,7 @@
+{
+  "name": "@dus/forge",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/packages/forge/src/index.js",
+  "types": "dist/packages/forge/src/index.d.ts"
+}

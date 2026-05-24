@@ -1,0 +1,7 @@
+{
+  "name": "@dus/comms",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/packages/comms/src/index.js",
+  "types": "dist/packages/comms/src/index.d.ts"
+}
