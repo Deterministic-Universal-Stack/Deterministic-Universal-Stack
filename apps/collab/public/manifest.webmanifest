@@ -1,0 +1,10 @@
+{
+  "name": "DUS Collaborative HTML",
+  "short_name": "DUS Collab",
+  "description": "A human-centric collaborative HTML room with local Ollama witness support.",
+  "start_url": "/?room=lobby",
+  "display": "standalone",
+  "background_color": "#f4ede2",
+  "theme_color": "#b55d32",
+  "icons": []
+}

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DUS Collaborative HTML</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#b55d32" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="rail">
+        <div class="brand">
+          <p class="eyebrow">Deterministic Universal Stack</p>
+          <h1>Human-Centric Alt-Internet Studio</h1>
+          <p class="lede">A live collaborative HTML room that feels simple in Chrome, speaks GitHub, and keeps a local Ollama witness inside shared state. Built to sit beside a future DUS Forge and DUS Navigator.</p>
+          <div class="brand-tags">
+            <span class="brand-tag">Chrome-friendly</span>
+            <span class="brand-tag">GitHub bridge</span>
+            <span class="brand-tag">Local Ollama</span>
+          </div>
+        </div>
+
+        <section class="card identity-card">
+          <div class="card-head">
+            <h2>Connect</h2>
+            <span id="connectionBadge" class="badge badge-warm">Offline</span>
+          </div>
+          <label>
+            Your name
+            <input id="nameInput" type="text" maxlength="32" placeholder="James" />
+          </label>
+          <label>
+            Room name
+            <input id="roomInput" type="text" maxlength="48" placeholder="hello-room" />
+          </label>
+          <label>
+            Accent color
+            <input id="colorInput" type="color" value="#b55d32" />
+          </label>
+          <button id="connectButton" class="primary-button">Enter Room</button>
+          <p class="hint">Share the same room name and server URL with your friend. When one of you types, both screens converge.</p>
+        </section>
+
+        <section class="card presence-card">
+          <div class="card-head">
+            <h2>Presence</h2>
+            <span id="stateHash" class="mini-hash">state: pending</span>
+          </div>
+          <ul id="presenceList" class="presence-list"></ul>
+          <div class="metrics">
+            <div>
+              <span class="metric-label">Events</span>
+              <strong id="eventCount">0</strong>
+            </div>
+            <div>
+              <span class="metric-label">Frontier</span>
+              <strong id="frontierCount">0</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="card chat-card">
+          <div class="card-head">
+            <h2>Room Chat</h2>
+          </div>
+          <div id="chatLog" class="chat-log"></div>
+          <form id="chatForm" class="chat-form">
+            <textarea id="chatInput" rows="3" placeholder="Send a note to your collaborator..."></textarea>
+            <button class="secondary-button" type="submit">Send</button>
+          </form>
+        </section>
+
+        <section class="card bridge-card">
+          <div class="card-head">
+            <h2>GitHub + Chrome</h2>
+          </div>
+          <label>
+            GitHub HTML URL
+            <input id="githubUrlInput" type="text" placeholder="https://github.com/user/repo/blob/main/index.html" />
+          </label>
+          <div class="stack-actions">
+            <button id="githubImportButton" class="secondary-button">Import from GitHub</button>
+            <button id="downloadHtmlButton" class="ghost-button">Download HTML</button>
+          </div>
+          <div class="stack-actions">
+            <button id="copyHtmlButton" class="ghost-button">Copy HTML</button>
+            <button id="installButton" class="ghost-button">Install in Chrome</button>
+          </div>
+          <p id="githubStatus" class="hint">Bring a GitHub HTML file into the room, then keep collaborating live.</p>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <section class="workspace-header card">
+          <div>
+            <p class="eyebrow">Shared Document</p>
+            <input id="titleInput" class="title-input" type="text" value="DUS Room" />
+            <p id="lastEdited" class="status-line">Waiting for first edit.</p>
+            <p id="githubSource" class="status-line">GitHub source: none</p>
+          </div>
+          <div class="header-actions">
+            <button id="copyLinkButton" class="ghost-button">Copy Room Link</button>
+            <button id="formatButton" class="ghost-button">Format HTML</button>
+          </div>
+        </section>
+
+        <section class="editor-grid">
+          <section class="card editor-card">
+            <div class="card-head">
+              <h2>Editor</h2>
+              <span class="badge badge-soft">Live source</span>
+            </div>
+            <textarea id="editor" spellcheck="false" class="editor-area"></textarea>
+          </section>
+
+          <section class="card preview-card">
+            <div class="card-head">
+              <h2>Viewer</h2>
+              <span class="badge badge-soft">Live preview</span>
+            </div>
+            <iframe id="preview" class="preview-frame" title="HTML preview"></iframe>
+          </section>
+        </section>
+
+        <section class="card witness-card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Local Ollama Witness</p>
+              <h2>State-aware guidance inside DUS laws</h2>
+            </div>
+            <div class="witness-actions">
+              <button id="suggestButton" class="primary-button">Ask for HTML Suggestion</button>
+              <button id="chatWitnessButton" class="secondary-button">Ask a Question</button>
+            </div>
+          </div>
+          <textarea id="witnessPrompt" rows="4" class="witness-prompt" placeholder="Ask for a change, design help, accessibility improvement, or a fix."></textarea>
+          <div id="witnessLog" class="witness-log"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="witnessEntryTemplate">
+      <article class="witness-entry">
+        <div class="witness-entry-head">
+          <strong class="witness-mode"></strong>
+          <button class="apply-button" type="button" hidden>Apply Suggested HTML</button>
+        </div>
+        <p class="witness-question"></p>
+        <pre class="witness-response"></pre>
+      </article>
+    </template>
+
+    <script type="module" src="/client.js"></script>
+  </body>
+</html>

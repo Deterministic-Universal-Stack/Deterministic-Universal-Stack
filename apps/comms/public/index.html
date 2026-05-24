@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DUS Peer Communications</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="rail">
+        <p class="eyebrow">Deterministic Universal Stack</p>
+        <h1>Peer Communications</h1>
+        <p class="lede">A no-central-server browser communication app with DUS event logs, deterministic replay, and manual WebRTC bootstrap.</p>
+
+        <section class="card">
+          <h2>Identity</h2>
+          <label>
+            Your name
+            <input id="displayName" type="text" placeholder="James" />
+          </label>
+          <label>
+            Room
+            <input id="roomId" type="text" placeholder="friends-room" />
+          </label>
+          <div class="actions">
+            <button id="startButton" class="primary">Start Session</button>
+            <button id="joinButton" class="secondary">Join From Invite</button>
+          </div>
+          <p class="hint">Use the same room name on both machines. The first handshake is manual; after the datachannel opens, events sync peer-to-peer.</p>
+        </section>
+
+        <section class="card">
+          <h2>Manual Handshake</h2>
+          <p class="hint">Step 1: creator clicks start and copies the invite bundle. Step 2: joiner pastes invite and creates an answer bundle. Step 3: creator pastes the answer bundle.</p>
+          <label>
+            Invite / answer bundle
+            <textarea id="handshakeInput" rows="10" placeholder="Paste the bundle you received here."></textarea>
+          </label>
+          <div class="actions">
+            <button id="copyBundleButton" class="secondary">Copy My Bundle</button>
+            <button id="applyBundleButton" class="secondary">Apply Bundle</button>
+          </div>
+          <pre id="bundlePreview" class="bundle-preview"></pre>
+        </section>
+
+        <section class="card">
+          <h2>Status</h2>
+          <p id="statusLine" class="status">Idle.</p>
+          <p id="hashLine" class="hash">state: pending</p>
+          <p id="peerLine" class="hash">peer: none</p>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <section class="card video-card">
+          <div class="video-head">
+            <h2>Video</h2>
+            <div class="actions">
+              <button id="toggleAudioButton" class="secondary">Mute Audio</button>
+              <button id="toggleVideoButton" class="secondary">Hide Video</button>
+              <button id="endButton" class="danger">End</button>
+            </div>
+          </div>
+          <div class="video-grid">
+            <div class="video-panel">
+              <span>Local</span>
+              <video id="localVideo" autoplay playsinline muted></video>
+            </div>
+            <div class="video-panel">
+              <span>Remote</span>
+              <video id="remoteVideo" autoplay playsinline></video>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Peer Chat</h2>
+          <div id="chatLog" class="chat-log"></div>
+          <form id="chatForm" class="chat-form">
+            <textarea id="chatInput" rows="3" placeholder="Type a peer-to-peer message..."></textarea>
+            <button class="primary" type="submit">Send</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>DUS Event Log</h2>
+          <div id="eventLog" class="event-log"></div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/client.js"></script>
+  </body>
+</html>
