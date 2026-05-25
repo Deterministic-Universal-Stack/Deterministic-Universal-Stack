@@ -47,13 +47,14 @@ export interface ReducerValidationResult extends VerificationResult {
 export type Reducer<TValue = Record<string, unknown>, TPayload = unknown> = (state: State<TValue>, event: Event<TPayload>) => State<TValue>;
 export declare function canonicalStringify(value: unknown): string;
 export declare function canonicalHash(value: unknown): string;
+export declare function stringifyWithBigInt(value: unknown, spacing?: number): string;
 export declare function signEvent(eventHash: string, signingKey: string): string;
 export declare function verifyEventSignature(event: Event, signingKey: string): boolean;
 export declare function createState<TValue>(value: TValue, eventCount?: bigint): State<TValue>;
 export declare function compareEventIds(a: string, b: string): number;
 export declare function canonicalEventOrder(events: Iterable<Event>): Event[];
 export declare function hasCycles(events: Iterable<Event>): boolean;
-export declare function topologicalSort(events: Iterable<Event>): Event[];
+export declare function topologicalSort(events: Iterable<Event>, maxDepth?: number): Event[];
 export declare function mergeEventSets(left: Iterable<Event>, right: Iterable<Event>): Map<string, Event>;
 export declare class DUS<TValue = Record<string, unknown>> {
     private readonly reducer;
@@ -64,6 +65,7 @@ export declare class DUS<TValue = Record<string, unknown>> {
     private readonly events;
     private frontier;
     private state;
+    private maxEvents;
     constructor(nodeId: string, reducer: Reducer<TValue>, options: DUSOptions<TValue>);
     emit<TPayload>(type: string, payload: TPayload, options?: EmitOptions): Event<TPayload>;
     accept(event: Event): void;

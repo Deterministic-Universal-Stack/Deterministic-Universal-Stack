@@ -1,0 +1,1 @@
+{"version":3,"file":"wasm.d.ts","sourceRoot":"","sources":["../../../../../packages/zplane/src/adapters/wasm.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,MAAM,aAAa,CAAC;AAC9C,OAAO,EAAE,iBAAiB,EAAE,MAAM,iBAAiB,CAAC;AAEpD,qBAAa,WAAY,SAAQ,iBAAiB;IAChD,QAAQ,kBAAwB;IAChC,OAAO,SAAgB;CACxB;AAED,eAAO,MAAM,WAAW,aAAoB,CAAC"}

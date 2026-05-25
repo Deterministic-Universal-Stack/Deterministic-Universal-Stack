@@ -26,4 +26,32 @@ export declare class DeterministicAgentRuntime {
     replay(events?: Event<unknown>[]): State<Record<string, unknown>>;
     sync(peer: DeterministicAgentRuntime): AgentTimeline;
 }
+export interface ProgramInstruction {
+    op: "set" | "append" | "increment";
+    key: string;
+    value?: unknown;
+}
+export interface ProgramFrame {
+    runtimeId: string;
+    stepId: string;
+    instruction: ProgramInstruction;
+    emittedAt: number;
+}
+export interface ProgramTimeline {
+    runtimeId: string;
+    events: Event[];
+    state: State<Record<string, unknown>>;
+}
+export declare const programReducer: Reducer<Record<string, unknown>>;
+export declare class DeterministicProgramRuntime {
+    readonly nodeId: string;
+    readonly runtimeId: string;
+    private readonly dus;
+    constructor(nodeId: string, runtimeId: string, seedEvents?: Event[]);
+    step(instruction: ProgramInstruction, timestamp?: number): Event;
+    state(): State<Record<string, unknown>>;
+    timeline(): ProgramTimeline;
+    replay(events?: Event<unknown>[]): State<Record<string, unknown>>;
+    sync(peer: DeterministicProgramRuntime): ProgramTimeline;
+}
 //# sourceMappingURL=index.d.ts.map

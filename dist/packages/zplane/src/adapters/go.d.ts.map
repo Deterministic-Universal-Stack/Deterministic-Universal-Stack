@@ -1,0 +1,1 @@
+{"version":3,"file":"go.d.ts","sourceRoot":"","sources":["../../../../../packages/zplane/src/adapters/go.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,MAAM,aAAa,CAAC;AAC9C,OAAO,EAAE,iBAAiB,EAAE,MAAM,iBAAiB,CAAC;AAEpD,qBAAa,SAAU,SAAQ,iBAAiB;IAC9C,QAAQ,kBAAsB;IAC9B,OAAO,SAAgB;CACxB;AAED,eAAO,MAAM,SAAS,WAAkB,CAAC"}

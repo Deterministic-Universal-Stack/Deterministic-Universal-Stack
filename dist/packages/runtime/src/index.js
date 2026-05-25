@@ -63,4 +63,70 @@ export class DeterministicAgentRuntime {
         return this.timeline();
     }
 }
+export const programReducer = (state, event) => {
+    const frame = event.payload;
+    const next = { ...state.value };
+    switch (frame.instruction.op) {
+        case "set":
+            next[frame.instruction.key] = frame.instruction.value;
+            break;
+        case "append": {
+            const existing = Array.isArray(next[frame.instruction.key]) ? next[frame.instruction.key] : [];
+            next[frame.instruction.key] = [...existing, frame.instruction.value];
+            break;
+        }
+        case "increment": {
+            const amount = typeof frame.instruction.value === "number" ? frame.instruction.value : 1;
+            const current = typeof next[frame.instruction.key] === "number" ? next[frame.instruction.key] : 0;
+            next[frame.instruction.key] = current + amount;
+            break;
+        }
+        default:
+            break;
+    }
+    return {
+        value: next,
+        hash: canonicalHash(next),
+        eventCount: state.eventCount + 1n
+    };
+};
+export class DeterministicProgramRuntime {
+    nodeId;
+    runtimeId;
+    dus;
+    constructor(nodeId, runtimeId, seedEvents = []) {
+        this.nodeId = nodeId;
+        this.runtimeId = runtimeId;
+        this.dus = new DUS(nodeId, programReducer, {
+            reducerVersion: "dus-program-runtime@1",
+            initialValue: {}
+        });
+        this.dus.sync(seedEvents);
+    }
+    step(instruction, timestamp = Date.now()) {
+        return this.dus.emit("program_step", {
+            runtimeId: this.runtimeId,
+            stepId: `${this.runtimeId}:${this.dus.getEvents().length + 1}`,
+            instruction,
+            emittedAt: timestamp
+        }, { timestamp, sessionId: this.runtimeId });
+    }
+    state() {
+        return this.dus.getState();
+    }
+    timeline() {
+        return {
+            runtimeId: this.runtimeId,
+            events: this.dus.getEvents(),
+            state: this.dus.getState()
+        };
+    }
+    replay(events = this.dus.getEvents()) {
+        return this.dus.replay(events);
+    }
+    sync(peer) {
+        this.dus.sync(peer.timeline().events);
+        return this.timeline();
+    }
+}
 //# sourceMappingURL=index.js.map
