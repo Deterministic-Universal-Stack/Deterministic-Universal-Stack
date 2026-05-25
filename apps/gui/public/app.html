@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DUS App Surface</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="kind">App projection</p>
+          <h1 id="name">Loading</h1>
+        </div>
+        <a class="button" href="/">Hub</a>
+      </header>
+      <section class="surface-grid">
+        <article class="panel">
+          <h2>Run</h2>
+          <code id="command"></code>
+          <div class="actions">
+            <button id="emit">Emit</button>
+            <button id="replay">Replay</button>
+            <button id="verify">Verify</button>
+          </div>
+        </article>
+        <article class="panel">
+          <h2>Layers</h2>
+          <div id="layers"></div>
+        </article>
+        <article class="panel">
+          <h2>Invariants</h2>
+          <div id="invariants"></div>
+        </article>
+        <article class="panel wide">
+          <h2>Operational Trace</h2>
+          <ol id="trace"></ol>
+        </article>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

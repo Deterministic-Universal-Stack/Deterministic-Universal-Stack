@@ -1,6 +1,10 @@
 {
-  "name": "@dus/cli",
+  "name": "@dus/cli-app",
   "version": "0.1.0",
   "type": "module",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@dus/core": "file:../../packages/core",
+    "@dus/storage": "file:../../packages/storage"
+  }
 }

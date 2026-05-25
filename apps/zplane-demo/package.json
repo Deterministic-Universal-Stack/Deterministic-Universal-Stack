@@ -1,0 +1,11 @@
+{
+  "name": "@dus/app-zplane-demo",
+  "version": "0.2.0",
+  "description": "Z Plane demo: multi-language deterministic workflow execution",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/apps/zplane-demo/src/index.js",
+    "dev": "tsx src/index.ts",
+    "build": "tsc --project ../../tsconfig.json --outDir ../../dist"
+  }
+}

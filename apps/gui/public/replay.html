@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DUS Replay Inspector</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Runtime Observatory</p>
+          <h1>Chaos, replay, and convergence</h1>
+        </div>
+        <a class="button" href="/">Hub</a>
+      </header>
+      <section class="metrics" id="metrics"></section>
+      <section class="surface-grid">
+        <article class="panel wide">
+          <h2>Benchmark Dashboard</h2>
+          <div class="bars" id="benchmarks"></div>
+        </article>
+        <article class="panel">
+          <h2>Fault Injection Hell</h2>
+          <div id="chaos"></div>
+        </article>
+        <article class="panel">
+          <h2>Hash Witness</h2>
+          <div id="witness"></div>
+        </article>
+        <article class="panel">
+          <h2>Branches</h2>
+          <div id="branches"></div>
+        </article>
+        <article class="panel">
+          <h2>Causal DAG</h2>
+          <div id="dag"></div>
+        </article>
+        <article class="panel wide">
+          <h2>Replay Scrubber</h2>
+          <input id="scrubber" type="range" min="0" value="0" />
+          <pre id="eventView"></pre>
+        </article>
+        <article class="panel wide">
+          <h2>Deterministic Time</h2>
+          <div id="timeRail"></div>
+        </article>
+      </section>
+    </main>
+    <script type="module" src="/replay.js"></script>
+  </body>
+</html>

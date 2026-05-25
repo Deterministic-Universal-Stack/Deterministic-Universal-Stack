@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ollama App Builder</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #0a0e27;
+      --secondary: #1a1f3a;
+      --tertiary: #252d47;
+      --accent: #00d9ff;
+      --accent-warm: #ff6b9d;
+      --success: #00ff88;
+      --warning: #ffaa00;
+      --error: #ff4444;
+      --text: #e0e6ff;
+      --text-dim: #a0aeff;
+      --grid: rgba(0, 217, 255, 0.1);
+      --nav-height: 70px;
+    }
+    body {
+      background: var(--primary);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', 'Courier New', monospace;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    .grid-bg {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background-image:
+        linear-gradient(0deg, var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none; z-index: 0;
+    }
+    nav {
+      position: fixed; top: 0; left: 0; width: 100%;
+      height: var(--nav-height);
+      background: rgba(10, 14, 39, 0.95);
+      border-bottom: 2px solid var(--accent);
+      display: flex; align-items: center;
+      padding: 0 30px; gap: 40px; z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+    .nav-brand {
+      font-size: 1.3em; font-weight: bold;
+      background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; letter-spacing: 2px; white-space: nowrap;
+    }
+    .nav-menu { display: flex; gap: 20px; list-style: none; flex: 1; }
+    .nav-item {
+      cursor: pointer; padding: 8px 16px; border-radius: 4px;
+      transition: all 0.3s ease; color: var(--text-dim);
+      font-size: 0.9em; border: 1px solid transparent;
+    }
+    .nav-item:hover { color: var(--accent); border-color: var(--accent); background: rgba(0, 217, 255, 0.1); }
+    .nav-item.active { color: var(--accent); background: rgba(0, 217, 255, 0.2); border-color: var(--accent); }
+    .nav-status {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 16px; background: rgba(0, 255, 136, 0.1);
+      border: 1px solid var(--success); border-radius: 4px; font-size: 0.85em;
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success); animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .content { position: relative; z-index: 5; margin-top: var(--nav-height); min-height: calc(100vh - var(--nav-height)); }
+    .container { max-width: 1600px; margin: 0 auto; padding: 40px 30px; }
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    h1 {
+      font-size: 2.2em;
+      background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 10px; letter-spacing: 1px;
+    }
+    .section-subtitle { color: var(--text-dim); font-size: 0.95em; margin-bottom: 30px; }
+    .card {
+      background: var(--secondary); border: 1px solid var(--accent);
+      border-radius: 6px; padding: 24px;
+      backdrop-filter: blur(10px); margin-bottom: 20px;
+      position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.1), transparent);
+      transition: left 0.5s;
+    }
+    .card:hover::before { left: 100%; }
+    .card-title { font-size: 1.2em; color: var(--accent); margin-bottom: 15px; font-weight: bold; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.9em; font-weight: 500; }
+    input, textarea, select {
+      width: 100%; padding: 12px;
+      background: var(--tertiary); border: 1px solid var(--accent);
+      border-radius: 4px; color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.9em; transition: all 0.3s ease;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none; border-color: var(--accent-warm);
+      background: rgba(255, 107, 157, 0.05);
+      box-shadow: 0 0 10px rgba(255, 107, 157, 0.2);
+    }
+    input:disabled { opacity: 0.5; cursor: not-allowed; }
+    textarea { resize: vertical; min-height: 150px; font-size: 0.85em; }
+    .btn {
+      padding: 12px 24px; border: none; border-radius: 4px;
+      cursor: pointer; font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.9em; transition: all 0.3s ease;
+      font-weight: 500; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+      color: var(--primary); border: none;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 217, 255, 0.3); }
+    .btn-secondary { background: var(--secondary); color: var(--accent); border: 1px solid var(--accent); }
+    .btn-secondary:hover { background: rgba(0, 217, 255, 0.1); }
+    .btn-success { background: var(--success); color: var(--primary); }
+    .btn-success:hover { filter: brightness(1.2); }
+    .btn-warning { background: var(--warning); color: var(--primary); }
+    .btn-error { background: var(--error); color: white; }
+    .btn-small { padding: 8px 16px; font-size: 0.8em; }
+    .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+    .status-badge { display: inline-block; padding: 6px 12px; border-radius: 12px; font-size: 0.8em; font-weight: bold; text-transform: uppercase; }
+    .badge-success { background: rgba(0, 255, 136, 0.2); color: var(--success); border: 1px solid var(--success); }
+    .badge-error { background: rgba(255, 68, 68, 0.2); color: var(--error); border: 1px solid var(--error); }
+    .badge-warning { background: rgba(255, 170, 0, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+    .badge-info { background: rgba(0, 217, 255, 0.2); color: var(--accent); border: 1px solid var(--accent); }
+    .code-block {
+      background: var(--primary); border: 1px solid var(--accent);
+      border-radius: 4px; padding: 15px; overflow-x: auto;
+      margin: 15px 0; font-size: 0.85em;
+    }
+    .code-block code { color: var(--accent); }
+    .chat-container {
+      background: var(--primary); border: 1px solid var(--accent);
+      border-radius: 6px; height: 400px; overflow-y: auto;
+      padding: 20px; margin-bottom: 20px;
+    }
+    .chat-message { margin-bottom: 15px; padding: 10px; border-left: 3px solid var(--accent); border-radius: 2px; }
+    .chat-message.user { border-left-color: var(--accent-warm); background: rgba(255, 107, 157, 0.05); }
+    .chat-message.ai { border-left-color: var(--success); background: rgba(0, 255, 136, 0.05); }
+    .chat-message.error { border-left-color: var(--error); background: rgba(255, 68, 68, 0.05); }
+    .chat-timestamp { font-size: 0.75em; color: var(--text-dim); margin-bottom: 5px; }
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--secondary); }
+    ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent-warm); }
+    .constraints-list {
+      background: var(--tertiary); border-left: 3px solid var(--warning);
+      padding: 15px; border-radius: 4px; margin-bottom: 20px;
+    }
+    .constraints-list h3 { color: var(--warning); margin-bottom: 10px; font-size: 1em; }
+    .constraint-item { color: var(--text-dim); font-size: 0.9em; padding: 5px 0; padding-left: 20px; position: relative; }
+    .constraint-item::before { content: '▪'; position: absolute; left: 0; color: var(--accent); }
+    .split-view { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 1200px) {
+      .split-view { grid-template-columns: 1fr; }
+      nav { padding: 0 15px; gap: 20px; }
+      .nav-brand { font-size: 1em; }
+      .nav-menu { gap: 10px; }
+      .nav-item { padding: 6px 10px; font-size: 0.8em; }
+    }
+    .loader {
+      border: 3px solid var(--secondary); border-top: 3px solid var(--accent);
+      border-radius: 50%; width: 30px; height: 30px;
+      animation: spin 1s linear infinite; margin: 0 auto;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .modal {
+      display: none; position: fixed; z-index: 200;
+      left: 0; top: 0; width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      animation: fadeIn 0.3s ease;
+    }
+    .modal.active { display: flex; align-items: center; justify-content: center; }
+    .modal-content {
+      background: var(--secondary); padding: 30px; border-radius: 8px;
+      border: 2px solid var(--accent); max-width: 600px; width: 90%;
+      max-height: 80vh; overflow-y: auto;
+    }
+    .modal-close { float: right; font-size: 2em; cursor: pointer; color: var(--text-dim); transition: color 0.3s; }
+    .modal-close:hover { color: var(--accent); }
+    .progress-bar { width: 100%; height: 8px; background: var(--secondary); border-radius: 4px; overflow: hidden; margin: 15px 0; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-warm)); transition: width 0.3s ease; }
+    .progress-text { font-size: 0.85em; color: var(--text-dim); margin-top: 8px; }
+
+    /* FIX: Toast notification */
+    .toast {
+      position: fixed; bottom: 30px; right: 30px;
+      padding: 14px 22px; border-radius: 6px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.9em;
+      z-index: 300; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+      border: 1px solid var(--success);
+      background: rgba(0, 255, 136, 0.15);
+      color: var(--success);
+    }
+    .toast.toast-error { border-color: var(--error); background: rgba(255,68,68,0.15); color: var(--error); }
+    .toast.show { opacity: 1; pointer-events: auto; }
+  </style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <nav>
+    <div class="nav-brand">◆ OLLAMA APP BUILDER</div>
+    <ul class="nav-menu">
+      <li class="nav-item active" onclick="switchPage('dashboard')">Dashboard</li>
+      <li class="nav-item" onclick="switchPage('create')">Create App</li>
+      <li class="nav-item" onclick="switchPage('builder')">Builder</li>
+      <li class="nav-item" onclick="switchPage('projects')">Projects</li>
+      <li class="nav-item" onclick="switchPage('settings')">Settings</li>
+      <li class="nav-item" onclick="switchPage('docs')">Docs</li>
+    </ul>
+    <div class="nav-status">
+      <div class="status-dot"></div>
+      <span>Ollama Ready</span>
+    </div>
+  </nav>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <div class="content">
+    <div class="container">
+
+      <!-- DASHBOARD -->
+      <div id="dashboard" class="page active">
+        <h1>Dashboard</h1>
+        <p class="section-subtitle">Manage your AI-powered web applications</p>
+        <div class="card">
+          <div class="card-title">Quick Stats</div>
+          <div class="grid-3">
+            <div>
+              <!-- FIX: IDs added so stats update live -->
+              <div id="stat-projects" style="font-size: 2em; color: var(--accent); margin-bottom: 10px;">0</div>
+              <div style="color: var(--text-dim);">Active Projects</div>
+            </div>
+            <div>
+              <div id="stat-builds" style="font-size: 2em; color: var(--success); margin-bottom: 10px;">0</div>
+              <div style="color: var(--text-dim);">Completed Builds</div>
+            </div>
+            <div>
+              <div id="stat-repairs" style="font-size: 2em; color: var(--warning); margin-bottom: 10px;">0</div>
+              <div style="color: var(--text-dim);">Repairs Performed</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Recent Activity</div>
+          <!-- FIX: Shared activity log ID so builder messages appear here too -->
+          <div class="chat-container" id="activityLog">
+            <div class="chat-message ai">
+              <div class="chat-timestamp">System Ready</div>
+              <div>Ollama App Builder initialized. Ready to create amazing web applications with AI assistance.</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Getting Started</div>
+          <p style="margin-bottom: 15px;">1. Create a new project</p>
+          <p style="margin-bottom: 15px;">2. Define your app specifications</p>
+          <p style="margin-bottom: 15px;">3. Let Ollama build and iterate</p>
+          <p style="margin-bottom: 20px;">4. Deploy your app</p>
+          <button class="btn btn-primary" onclick="switchPage('create')">Create Your First App</button>
+        </div>
+      </div>
+
+      <!-- CREATE APP -->
+      <div id="create" class="page">
+        <h1>Create New App</h1>
+        <p class="section-subtitle">Define your application requirements</p>
+        <div class="card">
+          <div class="card-title">Project Configuration</div>
+          <div class="form-group">
+            <label>Project Name</label>
+            <input type="text" id="projectName" placeholder="My Awesome App" />
+          </div>
+          <div class="form-group">
+            <label>Project Description</label>
+            <textarea id="projectDesc" placeholder="Describe what your app does..."></textarea>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Ollama Model</label>
+              <select id="ollamaModel">
+                <option value="mistral">Mistral</option>
+                <option value="neural-chat">Neural Chat</option>
+                <option value="orca-mini">Orca Mini</option>
+                <option value="openchat">OpenChat</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>App Type</label>
+              <select id="appType">
+                <option value="dashboard">Dashboard</option>
+                <option value="editor">Editor</option>
+                <option value="analyzer">Analyzer</option>
+                <option value="generator">Generator</option>
+                <option value="simulator">Simulator</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+          </div>
+          <div class="constraints-list">
+            <h3>Build Constraints</h3>
+            <div class="constraint-item">HTML must be valid and self-contained</div>
+            <div class="constraint-item">CSS must use CSS variables for theming</div>
+            <div class="constraint-item">JavaScript must be vanilla (no external deps)</div>
+            <div class="constraint-item">All API calls must use fetch API</div>
+            <div class="constraint-item">Max file size: 100KB</div>
+            <div class="constraint-item">Must include responsive design</div>
+            <div class="constraint-item">Accessibility standards (WCAG)</div>
+            <div class="constraint-item">Auto-repair on validation failure</div>
+          </div>
+          <div class="form-group">
+            <label>Additional Features (comma-separated)</label>
+            <input type="text" id="features" placeholder="dark mode, real-time updates, analytics" />
+          </div>
+          <div class="form-group">
+            <label>Design Style</label>
+            <select id="designStyle">
+              <option value="modern">Modern (Futuristic)</option>
+              <option value="minimal">Minimal (Clean)</option>
+              <option value="corporate">Corporate (Professional)</option>
+              <option value="retro">Retro (Vintage)</option>
+              <option value="glassmorphism">Glassmorphism (Contemporary)</option>
+            </select>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="createNewProject()">Create Project</button>
+            <button class="btn btn-secondary" onclick="switchPage('dashboard')">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BUILDER -->
+      <div id="builder" class="page">
+        <h1>App Builder</h1>
+        <p class="section-subtitle">Real-time building with Ollama</p>
+        <div class="split-view">
+          <div>
+            <div class="card">
+              <div class="card-title">Specifications</div>
+              <div class="form-group">
+                <label>Current Project</label>
+                <!-- FIX: not disabled — just readonly so it shows the name clearly -->
+                <input type="text" id="currentProject" placeholder="No project selected — go to Projects to select one" readonly style="cursor: default;" />
+              </div>
+              <div class="form-group">
+                <label>Component Request</label>
+                <textarea id="componentRequest" placeholder="e.g., Add a navigation bar with pages for Home, About, Services"></textarea>
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-primary" onclick="buildComponent()">Build Component</button>
+                <button class="btn btn-secondary" onclick="repairLastBuild()">Repair Last Build</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">Build Constraints &amp; Specs</div>
+              <div class="constraints-list">
+                <h3>Active Constraints</h3>
+                <div class="constraint-item">Must validate against HTML5 spec</div>
+                <div class="constraint-item">CSS must be scoped (no global pollution)</div>
+                <div class="constraint-item">No external libraries allowed</div>
+                <div class="constraint-item">Mobile-first responsive design</div>
+                <div class="constraint-item">Performance budget: LCP &lt; 2s</div>
+              </div>
+              <button class="btn btn-secondary btn-small" onclick="showConstraints()">View All Constraints</button>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-title">Build Progress</div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+              </div>
+              <!-- FIX: better default text -->
+              <div class="progress-text" id="progressText">Ready to build...</div>
+            </div>
+            <div class="card">
+              <div class="card-title">Build Log</div>
+              <div class="chat-container" id="buildLog">
+                <div class="chat-message ai">
+                  <div class="chat-timestamp">System</div>
+                  <div>Builder initialized. Awaiting component requests.</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">Validation Status</div>
+              <div style="margin-bottom: 15px;" id="validationBadges">
+                <span class="status-badge badge-success">HTML ✓</span>
+                <span class="status-badge badge-success">CSS ✓</span>
+                <span class="status-badge badge-success">JS ✓</span>
+              </div>
+              <button class="btn btn-secondary btn-small" onclick="runValidation()">Run Full Validation</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROJECTS -->
+      <div id="projects" class="page">
+        <h1>My Projects</h1>
+        <p class="section-subtitle">Manage and view your applications</p>
+        <div class="card">
+          <div class="btn-group" style="justify-content: flex-end; margin-top: 0;">
+            <button class="btn btn-primary" onclick="switchPage('create')">New Project</button>
+            <button class="btn btn-secondary" onclick="renderProjects()">Refresh</button>
+          </div>
+        </div>
+        <div id="projectsContainer" class="grid-2"></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="settings" class="page">
+        <h1>Settings</h1>
+        <p class="section-subtitle">Configure Ollama App Builder</p>
+        <div class="card">
+          <div class="card-title">Ollama Configuration</div>
+          <div class="form-group">
+            <label>Ollama Host</label>
+            <input type="text" id="ollamaHost" value="http://localhost:11434" />
+          </div>
+          <div class="form-group">
+            <label>Default Model</label>
+            <select id="defaultModel">
+              <option value="mistral">Mistral</option>
+              <option value="neural-chat" selected>Neural Chat</option>
+              <option value="orca-mini">Orca Mini</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Temperature (Creativity)</label>
+            <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7"
+              oninput="document.getElementById('tempDisplay').textContent = this.value; state.settings.temperature = parseFloat(this.value);" />
+            <span id="tempDisplay" style="color: var(--text-dim); margin-top: 5px;">0.7</span>
+          </div>
+          <!-- FIX: button calls saveSettings which now shows a toast -->
+          <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Builder Options</div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 10px;">
+              <input type="checkbox" id="autoRepair" checked />
+              <span>Enable Auto-Repair on Build Failure</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 10px;">
+              <input type="checkbox" id="strictValidation" checked />
+              <span>Strict Validation Mode</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 10px;">
+              <input type="checkbox" id="autoSync" />
+              <span>Auto-sync to File System</span>
+            </label>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Build Constraints</div>
+          <div class="form-group">
+            <label>Max File Size (KB)</label>
+            <input type="number" id="maxFileSize" value="100" min="10" max="1000" />
+          </div>
+          <div class="form-group">
+            <label>Max CSS Size (KB)</label>
+            <input type="number" id="maxCssSize" value="50" min="5" max="500" />
+          </div>
+          <div class="form-group">
+            <label>Max JS Size (KB)</label>
+            <input type="number" id="maxJsSize" value="30" min="5" max="300" />
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()">Update Constraints</button>
+        </div>
+      </div>
+
+      <!-- DOCS -->
+      <div id="docs" class="page">
+        <h1>Documentation</h1>
+        <p class="section-subtitle">Learn how to use Ollama App Builder</p>
+        <div class="card">
+          <div class="card-title">What is Ollama App Builder?</div>
+          <p>Ollama App Builder is a local development environment for creating web applications using AI assistance. It combines the power of Ollama's local models with constraint-based validation and automatic repair capabilities.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">Key Features</div>
+          <ul style="margin-left: 20px;">
+            <li>✨ AI-powered component generation using Ollama</li>
+            <li>📐 Constraint-based building (CSS, HTML, JS limits)</li>
+            <li>🔧 Automatic repair and validation</li>
+            <li>🎨 Multiple design styles and themes</li>
+            <li>📱 Mobile-first responsive design</li>
+            <li>⚡ Real-time build feedback</li>
+            <li>🔄 Iteration and refinement tools</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Constraints Overview</div>
+          <p style="margin-bottom: 15px;">Every build must satisfy these constraints:</p>
+          <div class="constraints-list">
+            <div class="constraint-item">Valid HTML5 markup</div>
+            <div class="constraint-item">CSS with scoped variables</div>
+            <div class="constraint-item">Vanilla JavaScript (no external deps)</div>
+            <div class="constraint-item">Responsive design (mobile-first)</div>
+            <div class="constraint-item">WCAG accessibility standards</div>
+            <div class="constraint-item">Performance optimization</div>
+            <div class="constraint-item">File size limits enforced</div>
+            <div class="constraint-item">Auto-repair on failures</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Getting Started</div>
+          <p>1. <strong>Ensure Ollama is running</strong> on localhost:11434</p>
+          <p>2. <strong>Create a new project</strong> from the Create App page</p>
+          <p>3. <strong>Use the Builder</strong> to request components</p>
+          <p>4. <strong>Review and validate</strong> the generated code</p>
+          <p>5. <strong>Iterate</strong> using the repair and rebuild tools</p>
+        </div>
+        <div class="card">
+          <div class="card-title">API Integration</div>
+          <p style="margin-bottom: 15px;">The builder uses the following endpoints:</p>
+          <div class="code-block">
+            <code>POST /api/generate - Generate component code<br/>
+POST /api/validate - Validate HTML/CSS/JS<br/>
+POST /api/repair - Auto-repair failed builds<br/>
+GET /api/models - List available models</code>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Best Practices</div>
+          <ul style="margin-left: 20px;">
+            <li>Be specific in component requests</li>
+            <li>Use the constraints as guidelines</li>
+            <li>Enable auto-repair for faster iteration</li>
+            <li>Test responsive design on mobile</li>
+            <li>Validate before deploying</li>
+            <li>Keep components modular</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Constraint Modal -->
+  <div id="constraintModal" class="modal" onclick="handleModalClick(event)">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal('constraintModal')">&times;</span>
+      <h2 style="margin-bottom: 20px; color: var(--accent);">Complete Build Constraints</h2>
+      <h3 style="color: var(--accent-warm); margin-top: 20px; margin-bottom: 10px;">HTML Constraints</h3>
+      <div class="constraints-list">
+        <div class="constraint-item">Must be valid HTML5</div>
+        <div class="constraint-item">DOCTYPE must be present</div>
+        <div class="constraint-item">Must include meta charset</div>
+        <div class="constraint-item">Must be self-contained (no external resources)</div>
+        <div class="constraint-item">Semantic HTML structure required</div>
+      </div>
+      <h3 style="color: var(--accent-warm); margin-top: 20px; margin-bottom: 10px;">CSS Constraints</h3>
+      <div class="constraints-list">
+        <div class="constraint-item">Use CSS custom properties (variables)</div>
+        <div class="constraint-item">No !important declarations</div>
+        <div class="constraint-item">Mobile-first approach required</div>
+        <div class="constraint-item">Max 50KB total size</div>
+        <div class="constraint-item">Scoped styling (no global pollution)</div>
+        <div class="constraint-item">Responsive breakpoints: 320px, 768px, 1024px</div>
+      </div>
+      <h3 style="color: var(--accent-warm); margin-top: 20px; margin-bottom: 10px;">JavaScript Constraints</h3>
+      <div class="constraints-list">
+        <div class="constraint-item">Vanilla JavaScript only (no frameworks)</div>
+        <div class="constraint-item">No external library dependencies</div>
+        <div class="constraint-item">Max 30KB total size</div>
+        <div class="constraint-item">Must use modern ES6+ syntax</div>
+        <div class="constraint-item">Proper error handling required</div>
+      </div>
+      <h3 style="color: var(--accent-warm); margin-top: 20px; margin-bottom: 10px;">Performance Constraints</h3>
+      <div class="constraints-list">
+        <div class="constraint-item">Total file size: Max 100KB</div>
+        <div class="constraint-item">LCP: &lt; 2 seconds</div>
+        <div class="constraint-item">FID: &lt; 100ms</div>
+        <div class="constraint-item">CLS: &lt; 0.1</div>
+        <div class="constraint-item">Lazy load images where possible</div>
+      </div>
+      <h3 style="color: var(--accent-warm); margin-top: 20px; margin-bottom: 10px;">Accessibility Constraints</h3>
+      <div class="constraints-list">
+        <div class="constraint-item">WCAG 2.1 Level AA compliance</div>
+        <div class="constraint-item">Proper heading hierarchy</div>
+        <div class="constraint-item">Color contrast ratio ≥ 4.5:1</div>
+        <div class="constraint-item">Keyboard navigation support</div>
+        <div class="constraint-item">ARIA labels where appropriate</div>
+      </div>
+      <h3 style="color: var(--accent-warm); margin-top: 20px; margin-bottom: 10px;">Build Process Constraints</h3>
+      <div class="constraints-list">
+        <div class="constraint-item">Validation runs on every build</div>
+        <div class="constraint-item">Failed validation triggers auto-repair</div>
+        <div class="constraint-item">Max 3 auto-repair attempts</div>
+        <div class="constraint-item">Human review required after 3 failures</div>
+        <div class="constraint-item">All changes logged and version controlled</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============ STATE — pure in-memory, no localStorage ============
+    // FIX #1: Removed all localStorage. State lives in memory only.
+    const state = {
+      currentPage: 'dashboard',
+      currentProject: null,
+      projects: [],
+      settings: {
+        ollamaHost: 'http://localhost:11434',
+        defaultModel: 'neural-chat',
+        temperature: 0.7,
+        autoRepair: true,
+        strictValidation: true,
+        maxFileSize: 100,
+        maxCssSize: 50,
+        maxJsSize: 30,
+      },
+      stats: { builds: 0, repairs: 0 }
+    };
+
+    // ============ TOAST ============
+    // FIX #7: Visible toast so saveSettings() feedback works from any page.
+    let toastTimer = null;
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast' + (isError ? ' toast-error' : '') + ' show';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { t.classList.remove('show'); }, 3000);
+    }
+
+    // ============ STATS ============
+    // FIX #6: Update dashboard quick-stats live.
+    function updateStats() {
+      const totalBuilds = state.projects.reduce((sum, p) => sum + (p.builds ? p.builds.length : 0), 0);
+      const el = (id) => document.getElementById(id);
+      if (el('stat-projects')) el('stat-projects').textContent = state.projects.length;
+      if (el('stat-builds'))   el('stat-builds').textContent   = totalBuilds + state.stats.builds;
+      if (el('stat-repairs'))  el('stat-repairs').textContent  = state.stats.repairs;
+    }
+
+    // ============ PAGE NAVIGATION ============
+    function switchPage(pageName) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const target = document.getElementById(pageName);
+      if (!target) { console.error('[OAB] Page not found:', pageName); return; }
+      target.classList.add('active');
+      state.currentPage = pageName;
+
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      const pages = ['dashboard', 'create', 'builder', 'projects', 'settings', 'docs'];
+      const idx = pages.indexOf(pageName);
+      const navItems = document.querySelectorAll('.nav-item');
+      if (idx >= 0 && navItems[idx]) navItems[idx].classList.add('active');
+
+      if (pageName === 'projects') renderProjects();
+      if (pageName === 'dashboard') updateStats();
+    }
+
+    // ============ CREATE PROJECT ============
+    function createNewProject() {
+      try {
+        const name  = document.getElementById('projectName').value.trim();
+        const desc  = document.getElementById('projectDesc').value.trim();
+        const model = document.getElementById('ollamaModel').value;
+        const type  = document.getElementById('appType').value;
+        const feats = document.getElementById('features').value;
+        const style = document.getElementById('designStyle').value;
+
+        if (!name) { showToast('Please enter a project name', true); return; }
+
+        const project = {
+          id: Date.now(),
+          name, description: desc, model,
+          appType: type,
+          features: feats.split(',').map(f => f.trim()).filter(Boolean),
+          designStyle: style,
+          created: new Date().toLocaleString(),
+          builds: [],
+          status: 'created'
+        };
+
+        state.projects.push(project);
+
+        // FIX #2: Auto-select the newly created project immediately.
+        state.currentProject = project;
+
+        // Clear form
+        document.getElementById('projectName').value = '';
+        document.getElementById('projectDesc').value = '';
+        document.getElementById('features').value = '';
+
+        updateStats();
+        showToast(`✓ Project "${name}" created`);
+        logToBuilder(`✓ Project loaded: ${name}`, 'ai');
+        switchPage('builder');
+
+        // Sync builder project field
+        const cpField = document.getElementById('currentProject');
+        if (cpField) cpField.value = project.name;
+
+      } catch (err) {
+        console.error('[OAB] createNewProject error:', err);
+        showToast('Error creating project: ' + err.message, true);
+      }
+    }
+
+    // ============ RENDER PROJECTS ============
+    function renderProjects() {
+      const container = document.getElementById('projectsContainer');
+      if (!container) return;
+
+      if (state.projects.length === 0) {
+        container.innerHTML = `
+          <div class="card" style="text-align:center;padding:40px;grid-column:1/-1;">
+            <div style="color:var(--text-dim);margin-bottom:20px;">No projects yet</div>
+            <button class="btn btn-primary" onclick="switchPage('create')">Create First Project</button>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = state.projects.map(p => `
+        <div class="card">
+          <div class="card-title">${p.name}</div>
+          <p style="color:var(--text-dim);margin-bottom:10px;font-size:0.9em;">${p.description || 'No description'}</p>
+          <div style="margin:15px 0;">
+            <span class="status-badge badge-info">${p.appType}</span>
+            <span class="status-badge badge-info">${p.model}</span>
+            <span class="status-badge badge-success">${p.designStyle}</span>
+          </div>
+          <div style="color:var(--text-dim);font-size:0.85em;margin-bottom:15px;">
+            Created: ${p.created} &nbsp;|&nbsp; Builds: ${p.builds ? p.builds.length : 0}
+          </div>
+          <div class="btn-group" style="justify-content:space-between;">
+            <button class="btn btn-primary btn-small" onclick="selectProject(${p.id})">Open in Builder</button>
+            <button class="btn btn-error btn-small" onclick="deleteProject(${p.id})">Delete</button>
+          </div>
+        </div>`).join('');
+    }
+
+    // ============ SELECT PROJECT ============
+    function selectProject(projectId) {
+      const project = state.projects.find(p => p.id === projectId);
+      if (!project) { showToast('Project not found', true); return; }
+      state.currentProject = project;
+
+      // FIX #9: Sync the builder text field and switch page.
+      const cpField = document.getElementById('currentProject');
+      if (cpField) cpField.value = project.name;
+
+      switchPage('builder');
+      logToBuilder(`✓ Loaded project: ${project.name}`, 'ai');
+      showToast(`✓ Opened "${project.name}"`);
+    }
+
+    // ============ DELETE PROJECT ============
+    function deleteProject(projectId) {
+      if (!confirm('Delete this project?')) return;
+      const proj = state.projects.find(p => p.id === projectId);
+      state.projects = state.projects.filter(p => p.id !== projectId);
+      if (state.currentProject && state.currentProject.id === projectId) {
+        state.currentProject = null;
+        const cpField = document.getElementById('currentProject');
+        if (cpField) cpField.value = '';
+      }
+      renderProjects();
+      updateStats();
+      showToast(proj ? `✓ Deleted "${proj.name}"` : '✓ Project deleted');
+    }
+
+    // ============ BUILD COMPONENT ============
+    async function buildComponent() {
+      if (!state.currentProject) {
+        showToast('Select a project first — go to Projects tab', true);
+        return;
+      }
+      const requestEl = document.getElementById('componentRequest');
+      const requestText = requestEl ? requestEl.value.trim() : '';
+      if (!requestText) { showToast('Describe what you want to build', true); return; }
+
+      logToBuilder(`Building: ${requestText}`, 'user');
+      updateProgress(20, 'Sending to Ollama...');
+
+      try {
+        const response = await generateComponent(requestText, state.currentProject);
+        updateProgress(60, 'Validating...');
+
+        const validation = validateComponent(response);
+        updateProgress(85, 'Checking constraints...');
+
+        if (validation.valid) {
+          updateProgress(100, 'Complete ✓');
+          logToBuilder('✓ All constraints satisfied!', 'ai');
+          if (requestEl) requestEl.value = '';
+
+          state.currentProject.builds.push({
+            id: Date.now(),
+            timestamp: new Date().toLocaleString(),
+            request: requestText,
+            code: response,
+            status: 'success',
+            validations: validation
+          });
+          updateStats();
+          updateValidationBadges(true);
+          // FIX #3: Reset progress text after a short delay.
+          setTimeout(() => updateProgress(0, 'Ready to build...'), 2500);
+
+        } else {
+          logToBuilder('⚠ Validation failed. Attempting repair...', 'error');
+          validation.errors.forEach(e => logToBuilder(`  - ${e}`, 'error'));
+          updateValidationBadges(false);
+          if (state.settings.autoRepair) {
+            await repairComponent(response, validation);
+          }
+        }
+      } catch (err) {
+        console.error('[OAB] buildComponent error:', err);
+        logToBuilder(`✗ Error: ${err.message}`, 'error');
+        updateProgress(0, 'Ready to build...');
+      }
+    }
+
+    // ============ GENERATE COMPONENT (Ollama stub) ============
+    async function generateComponent(request, project) {
+      // Simulates the Ollama API call.
+      // In production replace this with: fetch(`${state.settings.ollamaHost}/api/generate`, {...})
+      return generateSampleComponent(request, project);
+    }
+
+    function generateSampleComponent(request, project) {
+      const r = request.toLowerCase();
+      if (r.includes('nav') || r.includes('menu')) {
+        return `<nav style="background:var(--accent);padding:10px;border-radius:4px;">
+  <ul style="display:flex;gap:15px;list-style:none;padding:0;margin:0;">
+    <li><a href="#" style="color:white;text-decoration:none;">Home</a></li>
+    <li><a href="#" style="color:white;text-decoration:none;">About</a></li>
+    <li><a href="#" style="color:white;text-decoration:none;">Services</a></li>
+  </ul>
+</nav>`;
+      }
+      if (r.includes('button') || r.includes('btn')) {
+        return `<div style="display:flex;gap:10px;flex-wrap:wrap;">
+  <button style="padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:4px;cursor:pointer;">Primary</button>
+  <button style="padding:10px 20px;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:4px;cursor:pointer;">Secondary</button>
+  <button style="padding:10px 20px;background:var(--success);color:white;border:none;border-radius:4px;cursor:pointer;">Success</button>
+</div>`;
+      }
+      if (r.includes('card') || r.includes('form')) {
+        return `<div style="background:var(--secondary);border:1px solid var(--accent);border-radius:6px;padding:20px;max-width:400px;">
+  <h3 style="color:var(--accent);margin-bottom:15px;">Card Title</h3>
+  <p style="margin-bottom:15px;color:var(--text-dim);">Sample card component.</p>
+  <button style="padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:4px;cursor:pointer;width:100%;">Action</button>
+</div>`;
+      }
+      return `<div style="background:var(--secondary);border:1px solid var(--accent);border-radius:6px;padding:20px;">
+  <h2 style="color:var(--accent);margin-bottom:10px;">Generated Component</h2>
+  <p style="color:var(--text-dim);">Request: ${request}</p>
+</div>`;
+    }
+
+    // ============ VALIDATE ============
+    function validateComponent(html) {
+      const v = { valid: true, errors: [], warnings: [] };
+      try {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        if (doc.getElementsByTagName('parsererror').length > 0) {
+          v.valid = false; v.errors.push('Invalid HTML structure');
+        }
+      } catch (e) {
+        v.valid = false; v.errors.push('HTML parsing failed');
+      }
+      if (html.length > state.settings.maxFileSize * 1024) {
+        v.valid = false; v.errors.push(`HTML exceeds ${state.settings.maxFileSize}KB limit`);
+      }
+      if (html.includes('<script') && !html.includes('</' + 'script>')) {
+        v.valid = false; v.errors.push('Unclosed script tag');
+      }
+      if (html.includes('!important')) {
+        v.warnings.push('!important declarations found (avoid if possible)');
+      }
+      return v;
+    }
+
+    // ============ REPAIR ============
+    async function repairComponent(code, validation) {
+      logToBuilder('Sending to Ollama for repair...', 'ai');
+      updateProgress(50, 'Repairing...');
+      state.stats.repairs++;
+      updateStats();
+
+      try {
+        const repaired = await generateComponent('repair: ' + code.slice(0, 200), state.currentProject);
+        const nv = validateComponent(repaired);
+        updateProgress(90, 'Re-validating...');
+
+        if (nv.valid) {
+          updateProgress(100, 'Repair complete ✓');
+          logToBuilder('✓ Repair successful!', 'ai');
+          updateValidationBadges(true);
+          state.currentProject.builds.push({
+            id: Date.now(),
+            timestamp: new Date().toLocaleString(),
+            request: 'Auto-repair',
+            code: repaired,
+            status: 'repaired',
+            validations: nv
+          });
+          updateStats();
+          setTimeout(() => updateProgress(0, 'Ready to build...'), 2500);
+        } else {
+          logToBuilder('⚠ Repair incomplete. Manual intervention required.', 'error');
+          updateProgress(0, 'Ready to build...');
+        }
+      } catch (err) {
+        logToBuilder(`✗ Repair failed: ${err.message}`, 'error');
+        updateProgress(0, 'Ready to build...');
+      }
+    }
+
+    // ============ REPAIR LAST BUILD ============
+    // FIX #8: Added null guard for builds array.
+    async function repairLastBuild() {
+      if (!state.currentProject) { showToast('Select a project first', true); return; }
+      const builds = state.currentProject.builds;
+      if (!builds || builds.length === 0) { showToast('No builds to repair', true); return; }
+
+      const last = builds[builds.length - 1];
+      const v = validateComponent(last.code);
+      if (v.valid) { logToBuilder('Last build is already valid ✓', 'ai'); return; }
+
+      logToBuilder('Repairing last build...', 'user');
+      await repairComponent(last.code, v);
+    }
+
+    // ============ RUN VALIDATION ============
+    // FIX #8: Added null guard for builds array.
+    function runValidation() {
+      if (!state.currentProject) { logToBuilder('Select a project first', 'error'); return; }
+      const builds = state.currentProject.builds;
+      if (!builds || builds.length === 0) { logToBuilder('No builds to validate yet', 'error'); return; }
+
+      const last = builds[builds.length - 1];
+      const v = validateComponent(last.code);
+      logToBuilder('Running validation...', 'user');
+      updateProgress(50, 'Validating...');
+
+      if (v.valid) {
+        logToBuilder('✓ All validations passed!', 'ai');
+        updateProgress(100, 'Validation passed ✓');
+        updateValidationBadges(true);
+        setTimeout(() => updateProgress(0, 'Ready to build...'), 2000);
+      } else {
+        v.errors.forEach(e => logToBuilder(`✗ ${e}`, 'error'));
+        updateValidationBadges(false);
+        updateProgress(0, 'Ready to build...');
+      }
+      if (v.warnings && v.warnings.length > 0) {
+        v.warnings.forEach(w => logToBuilder(`⚠ ${w}`, 'error'));
+      }
+    }
+
+    // ============ PROGRESS ============
+    // FIX #3: Progress now accepts a label instead of hardcoding "Building...".
+    function updateProgress(percent, label) {
+      const fill = document.getElementById('progressFill');
+      const text = document.getElementById('progressText');
+      if (fill) fill.style.width = percent + '%';
+      if (text) text.textContent = label || (percent > 0 ? `Building... ${percent}%` : 'Ready to build...');
+    }
+
+    // ============ VALIDATION BADGES ============
+    function updateValidationBadges(allGood) {
+      const el = document.getElementById('validationBadges');
+      if (!el) return;
+      if (allGood) {
+        el.innerHTML =
+          '<span class="status-badge badge-success">HTML ✓</span> ' +
+          '<span class="status-badge badge-success">CSS ✓</span> ' +
+          '<span class="status-badge badge-success">JS ✓</span>';
+      } else {
+        el.innerHTML =
+          '<span class="status-badge badge-error">HTML ✗</span> ' +
+          '<span class="status-badge badge-warning">CSS ⚠</span> ' +
+          '<span class="status-badge badge-warning">JS ⚠</span>';
+      }
+    }
+
+    // ============ LOG TO BUILDER ============
+    function logToBuilder(message, type = 'ai') {
+      const log = document.getElementById('buildLog');
+      if (!log) return;
+      const timestamp = new Date().toLocaleTimeString();
+      const el = document.createElement('div');
+      el.className = `chat-message ${type}`;
+      el.innerHTML = `<div class="chat-timestamp">${timestamp}</div><div>${message}</div>`;
+      log.appendChild(el);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    // ============ SETTINGS ============
+    // FIX #7: saveSettings now shows a toast visible from any page.
+    // FIX #5: updateSettingsUI reads values safely with null checks.
+    function saveSettings() {
+      try {
+        const get = (id) => document.getElementById(id);
+        if (get('ollamaHost'))       state.settings.ollamaHost       = get('ollamaHost').value;
+        if (get('defaultModel'))     state.settings.defaultModel     = get('defaultModel').value;
+        if (get('autoRepair'))       state.settings.autoRepair       = get('autoRepair').checked;
+        if (get('strictValidation')) state.settings.strictValidation = get('strictValidation').checked;
+        if (get('maxFileSize'))      state.settings.maxFileSize      = parseInt(get('maxFileSize').value) || 100;
+        if (get('maxCssSize'))       state.settings.maxCssSize       = parseInt(get('maxCssSize').value)  || 50;
+        if (get('maxJsSize'))        state.settings.maxJsSize        = parseInt(get('maxJsSize').value)   || 30;
+        showToast('✓ Settings saved');
+      } catch (err) {
+        console.error('[OAB] saveSettings error:', err);
+        showToast('Error saving settings: ' + err.message, true);
+      }
+    }
+
+    function updateSettingsUI() {
+      const s = state.settings;
+      const set = (id, val, prop = 'value') => {
+        const el = document.getElementById(id);
+        if (el) el[prop] = val;
+      };
+      set('ollamaHost',       s.ollamaHost);
+      set('defaultModel',     s.defaultModel);
+      set('temperature',      s.temperature);
+      set('tempDisplay',      s.temperature, 'textContent');
+      set('autoRepair',       s.autoRepair,       'checked');
+      set('strictValidation', s.strictValidation, 'checked');
+      set('maxFileSize',      s.maxFileSize);
+      set('maxCssSize',       s.maxCssSize);
+      set('maxJsSize',        s.maxJsSize);
+    }
+
+    // ============ MODAL ============
+    function showConstraints() {
+      document.getElementById('constraintModal').classList.add('active');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+    // FIX #10: Only close if clicking the overlay, not the content inside.
+    function handleModalClick(e) {
+      if (e.target === document.getElementById('constraintModal')) {
+        closeModal('constraintModal');
+      }
+    }
+
+    // ============ INIT ============
+    window.addEventListener('load', () => {
+      try {
+        updateSettingsUI();
+        renderProjects();
+        updateStats();
+        logToBuilder('✓ Ollama App Builder loaded successfully', 'ai');
+      } catch (err) {
+        console.error('[OAB] Init error:', err);
+      }
+    });
+  </script>
+</body>
+</html>

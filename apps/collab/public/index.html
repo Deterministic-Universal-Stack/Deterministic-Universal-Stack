@@ -1,157 +1,502 @@
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>DUS Collaborative HTML</title>
-    <link rel="stylesheet" href="/styles.css" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#b55d32" />
-  </head>
-  <body>
-    <div class="shell">
-      <aside class="rail">
-        <div class="brand">
-          <p class="eyebrow">Deterministic Universal Stack</p>
-          <h1>Human-Centric Alt-Internet Studio</h1>
-          <p class="lede">A live collaborative HTML room that feels simple in Chrome, speaks GitHub, and keeps a local Ollama witness inside shared state. Built to sit beside a future DUS Forge and DUS Navigator.</p>
-          <div class="brand-tags">
-            <span class="brand-tag">Chrome-friendly</span>
-            <span class="brand-tag">GitHub bridge</span>
-            <span class="brand-tag">Local Ollama</span>
-          </div>
+    <title>DUS Collab – Real-time Editing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1d7874;
+            --accent: #ffd89b;
+            --success: #06a77d;
+            --bg-surface: #f5f5f5;
+            --bg-elevated: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border: #e0e0e0;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-rows: 64px 1fr;
+            height: 100vh;
+        }
+
+        .header {
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            gap: 24px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--primary);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--success));
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .doc-title input {
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 8px;
+            border-radius: 4px;
+            min-width: 200px;
+        }
+
+        .doc-title input:focus {
+            outline: none;
+            background: rgba(29, 120, 116, 0.1);
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-button {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .header-button:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .primary-header-button {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .primary-header-button:hover {
+            background: #156b69;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .editor-section {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-elevated);
+            border-right: 1px solid var(--border);
+        }
+
+        .editor-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 4px;
+            padding-right: 12px;
+            border-right: 1px solid var(--border);
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .toolbar-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .toolbar-btn:hover {
+            background: rgba(29, 120, 116, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .toolbar-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .editor-area {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .editor-content {
+            max-width: 800px;
+            margin: 0 auto;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .editor-content h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .editor-content h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 32px;
+            margin-bottom: 16px;
+        }
+
+        .editor-content p {
+            margin-bottom: 16px;
+        }
+
+        .editor-content textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 15px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            margin: 16px 0;
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        .sidebar {
+            background: var(--bg-surface);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border);
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-section h3 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .collaborator-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .collaborator-item:hover {
+            background: rgba(29, 120, 116, 0.05);
+        }
+
+        .collaborator-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--success));
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .collaborator-item-info h4 {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .collaborator-item-info p {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .comment {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.3s ease;
+        }
+
+        .comment:hover {
+            background: rgba(29, 120, 116, 0.03);
+        }
+
+        .comment-author {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .comment-text {
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(29, 120, 116, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon">✏️</div>
+                    <span>Collab</span>
+                </div>
+                <div class="doc-title">
+                    <input type="text" id="docTitle" value="Product Strategy Q4 2025" />
+                </div>
+                <div class="sync-status">
+                    <div class="sync-dot"></div>
+                    <span>All changes saved</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="header-button">Share</button>
+                <button class="header-button primary-header-button">Export</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="editor-section">
+                <div class="editor-toolbar">
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn">B</button>
+                        <button class="toolbar-btn">I</button>
+                        <button class="toolbar-btn">U</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn">H1</button>
+                        <button class="toolbar-btn">H2</button>
+                    </div>
+                </div>
+                <div class="editor-area">
+                    <div class="editor-content">
+                        <h1 id="title">Product Strategy Q4 2025</h1>
+                        <p>
+                            Our vision for this quarter focuses on three strategic pillars: <strong>expanding user reach</strong>, <strong>improving core reliability</strong>, and <strong>building the community</strong>.
+                        </p>
+                        <h2>1. Expanding User Reach</h2>
+                        <p>
+                            We'll launch three new integration partners that serve our target demographic. The initial rollout covers <em>enterprise clients</em> in the financial services sector.
+                        </p>
+                        <h2>2. Improving Core Reliability</h2>
+                        <textarea id="editBox" placeholder="Continue editing here..."></textarea>
+                        <h2>3. Building Community</h2>
+                        <p id="lastSection">
+                            Launch community forums, host monthly webinars, and establish a dedicated community manager role.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <h3>Collaborators</h3>
+                    <div class="collaborator-item">
+                        <div class="collaborator-avatar">A</div>
+                        <div class="collaborator-item-info">
+                            <h4>Alex Chen</h4>
+                            <p>Editing now</p>
+                        </div>
+                    </div>
+                    <div class="collaborator-item">
+                        <div class="collaborator-avatar">J</div>
+                        <div class="collaborator-item-info">
+                            <h4>Jordan Park</h4>
+                            <p>Viewed 2h ago</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Comments</h3>
+                    <div id="commentsList"></div>
+                </div>
+            </div>
         </div>
-
-        <section class="card identity-card">
-          <div class="card-head">
-            <h2>Connect</h2>
-            <span id="connectionBadge" class="badge badge-warm">Offline</span>
-          </div>
-          <label>
-            Your name
-            <input id="nameInput" type="text" maxlength="32" placeholder="James" />
-          </label>
-          <label>
-            Room name
-            <input id="roomInput" type="text" maxlength="48" placeholder="hello-room" />
-          </label>
-          <label>
-            Accent color
-            <input id="colorInput" type="color" value="#b55d32" />
-          </label>
-          <button id="connectButton" class="primary-button">Enter Room</button>
-          <p class="hint">Share the same room name and server URL with your friend. When one of you types, both screens converge.</p>
-        </section>
-
-        <section class="card presence-card">
-          <div class="card-head">
-            <h2>Presence</h2>
-            <span id="stateHash" class="mini-hash">state: pending</span>
-          </div>
-          <ul id="presenceList" class="presence-list"></ul>
-          <div class="metrics">
-            <div>
-              <span class="metric-label">Events</span>
-              <strong id="eventCount">0</strong>
-            </div>
-            <div>
-              <span class="metric-label">Frontier</span>
-              <strong id="frontierCount">0</strong>
-            </div>
-          </div>
-        </section>
-
-        <section class="card chat-card">
-          <div class="card-head">
-            <h2>Room Chat</h2>
-          </div>
-          <div id="chatLog" class="chat-log"></div>
-          <form id="chatForm" class="chat-form">
-            <textarea id="chatInput" rows="3" placeholder="Send a note to your collaborator..."></textarea>
-            <button class="secondary-button" type="submit">Send</button>
-          </form>
-        </section>
-
-        <section class="card bridge-card">
-          <div class="card-head">
-            <h2>GitHub + Chrome</h2>
-          </div>
-          <label>
-            GitHub HTML URL
-            <input id="githubUrlInput" type="text" placeholder="https://github.com/user/repo/blob/main/index.html" />
-          </label>
-          <div class="stack-actions">
-            <button id="githubImportButton" class="secondary-button">Import from GitHub</button>
-            <button id="downloadHtmlButton" class="ghost-button">Download HTML</button>
-          </div>
-          <div class="stack-actions">
-            <button id="copyHtmlButton" class="ghost-button">Copy HTML</button>
-            <button id="installButton" class="ghost-button">Install in Chrome</button>
-          </div>
-          <p id="githubStatus" class="hint">Bring a GitHub HTML file into the room, then keep collaborating live.</p>
-        </section>
-      </aside>
-
-      <main class="workspace">
-        <section class="workspace-header card">
-          <div>
-            <p class="eyebrow">Shared Document</p>
-            <input id="titleInput" class="title-input" type="text" value="DUS Room" />
-            <p id="lastEdited" class="status-line">Waiting for first edit.</p>
-            <p id="githubSource" class="status-line">GitHub source: none</p>
-          </div>
-          <div class="header-actions">
-            <button id="copyLinkButton" class="ghost-button">Copy Room Link</button>
-            <button id="formatButton" class="ghost-button">Format HTML</button>
-          </div>
-        </section>
-
-        <section class="editor-grid">
-          <section class="card editor-card">
-            <div class="card-head">
-              <h2>Editor</h2>
-              <span class="badge badge-soft">Live source</span>
-            </div>
-            <textarea id="editor" spellcheck="false" class="editor-area"></textarea>
-          </section>
-
-          <section class="card preview-card">
-            <div class="card-head">
-              <h2>Viewer</h2>
-              <span class="badge badge-soft">Live preview</span>
-            </div>
-            <iframe id="preview" class="preview-frame" title="HTML preview"></iframe>
-          </section>
-        </section>
-
-        <section class="card witness-card">
-          <div class="card-head">
-            <div>
-              <p class="eyebrow">Local Ollama Witness</p>
-              <h2>State-aware guidance inside DUS laws</h2>
-            </div>
-            <div class="witness-actions">
-              <button id="suggestButton" class="primary-button">Ask for HTML Suggestion</button>
-              <button id="chatWitnessButton" class="secondary-button">Ask a Question</button>
-            </div>
-          </div>
-          <textarea id="witnessPrompt" rows="4" class="witness-prompt" placeholder="Ask for a change, design help, accessibility improvement, or a fix."></textarea>
-          <div id="witnessLog" class="witness-log"></div>
-        </section>
-      </main>
     </div>
 
-    <template id="witnessEntryTemplate">
-      <article class="witness-entry">
-        <div class="witness-entry-head">
-          <strong class="witness-mode"></strong>
-          <button class="apply-button" type="button" hidden>Apply Suggested HTML</button>
-        </div>
-        <p class="witness-question"></p>
-        <pre class="witness-response"></pre>
-      </article>
-    </template>
+    <script>
+        // Document state
+        const docState = {
+            title: 'Product Strategy Q4 2025',
+            content: '',
+            lastModified: new Date(),
+            modifiedBy: 'You',
+            comments: [
+                { author: 'Jordan Park', text: 'Love the focus on community.' },
+                { author: 'Sam Williams', text: 'Need to discuss enterprise rollout timeline.' }
+            ]
+        };
 
-    <script type="module" src="/client.js"></script>
-  </body>
+        // Title editing
+        document.getElementById('docTitle').addEventListener('input', function(e) {
+            docState.title = e.target.value;
+            document.getElementById('title').textContent = e.target.value;
+            updateSync();
+        });
+
+        // Editor textarea
+        document.getElementById('editBox').addEventListener('input', function(e) {
+            docState.content = e.target.value;
+            updateSync();
+        });
+
+        function updateSync() {
+            docState.lastModified = new Date();
+            // Show sync status
+            const syncDot = document.querySelector('.sync-dot');
+            syncDot.style.opacity = '0.5';
+            setTimeout(() => {
+                syncDot.style.opacity = '1';
+            }, 500);
+        }
+
+        // Render comments
+        function renderComments() {
+            const list = document.getElementById('commentsList');
+            list.innerHTML = docState.comments.map(comment => `
+                <div class="comment">
+                    <div class="comment-author">${comment.author}</div>
+                    <div class="comment-text">${comment.text}</div>
+                </div>
+            `).join('');
+        }
+
+        // Toolbar button functionality
+        document.querySelectorAll('.toolbar-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
+        });
+
+        // Header buttons
+        document.querySelector('.header-button').addEventListener('click', function() {
+            alert('Share functionality coming soon!');
+        });
+
+        document.querySelector('.primary-header-button').addEventListener('click', function() {
+            const doc = `
+Title: ${docState.title}
+
+${document.querySelector('.editor-content').innerText}
+
+${docState.content ? '\nEditor content:\n' + docState.content : ''}
+            `.trim();
+
+            const blob = new Blob([doc], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = docState.title.toLowerCase().replace(/\s+/g, '-') + '.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Initialize
+        renderComments();
+    </script>
+</body>
 </html>
