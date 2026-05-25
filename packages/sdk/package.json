@@ -2,6 +2,23 @@
   "name": "@dus/sdk",
   "version": "0.1.0",
   "type": "module",
-  "main": "dist/packages/sdk/src/index.js",
-  "types": "dist/packages/sdk/src/index.d.ts"
+  "private": true,
+  "bin": {
+    "dus": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@dus/core": "0.1.0",
+    "@dus/replay": "0.1.0",
+    "@dus/runtime": "0.1.0",
+    "@dus/storage": "0.1.0",
+    "@dus/eventlog": "0.1.0",
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "@types/node": "^20.0.0"
+  }
 }

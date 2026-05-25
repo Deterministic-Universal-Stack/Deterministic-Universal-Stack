@@ -18,23 +18,60 @@
       "@dus/core": [
         "packages/core/src/index.ts"
       ],
+      "@dus/comms": [
+        "packages/comms/src/index.ts"
+      ],
+      "@dus/capabilities": [
+        "packages/capabilities/src/index.ts"
+      ],
       "@dus/math": [
         "packages/math/src/index.ts"
+      ],
+      "@dus/forge": [
+        "packages/forge/src/index.ts"
+      ],
+      "@dus/eventlog": [
+        "packages/eventlog/src/index.ts"
       ],
       "@dus/network": [
         "packages/network/src/index.ts"
       ],
+      "@dus/navigator": [
+        "packages/navigator/src/index.ts"
+      ],
+      "@dus/proof-harness": [
+        "packages/proof-harness/src/index.ts"
+      ],
+      "@dus/replay": [
+        "packages/replay/src/index.ts"
+      ],
       "@dus/runtime": [
         "packages/runtime/src/index.ts"
       ],
+      "@dus/sdk": [
+        "packages/sdk/src/index.ts"
+      ],
+      "@dus/social": [
+        "packages/social/src/index.ts"
+      ],
       "@dus/storage": [
         "packages/storage/src/index.ts"
+      ],
+      "@dus/zplane": [
+        "packages/zplane/src/index.ts"
+      ],
+      "@dus/zplane/adapters": [
+        "packages/zplane/src/adapters/index.ts"
+      ],
+      "@dus/zplane/runtime": [
+        "packages/zplane/src/runtime/index.ts"
       ]
     }
   },
   "include": [
     "packages/**/*.ts",
     "apps/**/*.ts",
+    "scripts/**/*.ts",
     "tests/**/*.ts"
   ],
   "exclude": [

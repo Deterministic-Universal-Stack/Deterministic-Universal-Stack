@@ -1,7 +1,8 @@
 {
   "name": "deterministic-universal-stack",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
+  "type": "module",
   "description": "Deterministic Universal Stack: a replayable, causally consistent, event-derived substrate for decentralized applications.",
   "author": "James Chapman <xhecarpenxer@gmail.com>",
   "license": "MIT",
@@ -11,7 +12,7 @@
   },
   "homepage": "https://github.com/Deterministic-Universal-Stack/Deterministic-Universal-Stack",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20.11.0"
   },
   "workspaces": [
     "packages/*",
@@ -19,18 +20,41 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "bench": "tsx scripts/benchmarks.ts",
     "clean": "rm -rf dist coverage .tmp packages/*/dist apps/*/dist",
+    "collab": "tsx apps/collab/src/index.ts",
+    "comms": "tsx apps/comms/src/index.ts",
     "demo": "tsx apps/playground/src/index.ts",
+    "forge": "tsx apps/forge/src/index.ts",
+    "gui": "tsx apps/gui/src/index.ts",
+    "navigator": "tsx apps/navigator/src/index.ts",
+    "prove": "tsx scripts/prove.ts",
     "replay": "tsx apps/cli/src/index.ts replay",
+    "runtime-prototype": "tsx apps/runtime-prototype/src/index.ts",
+    "social": "tsx apps/social/src/index.ts",
+    "sync-demo": "tsx apps/sync-demo/src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "verify": "npm run typecheck && npm run test"
+    "verify": "npm run typecheck && npm run test",
+    "audit": "npm audit",
+    "audit:fix": "npm audit fix",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write ."
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
+    "@types/node": "^20.11.0",
+    "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.1",
+    "prettier": "^3.3.0",
     "tsx": "^4.19.0",
     "typescript": "^5.8.0",
     "vitest": "^3.2.0"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "ws": "^8.18.3"
   }
 }

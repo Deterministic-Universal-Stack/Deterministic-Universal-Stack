@@ -59,7 +59,39 @@ export type Reducer<TValue = Record<string, unknown>, TPayload = unknown> = (
   event: Event<TPayload>
 ) => State<TValue>;
 
+/**
+ * Validates input object for security concerns
+ * @param value - Value to validate
+ * @param depth - Current recursion depth
+ * @param maxDepth - Maximum allowed depth
+ * @throws Error if validation fails
+ */
+function validateInput(value: unknown, depth = 0, maxDepth = 32): void {
+  if (depth > maxDepth) {
+    throw new Error("Input structure too deeply nested");
+  }
+
+  if (value === null || value === undefined) {
+    return;
+  }
+
+  if (typeof value === "object") {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        validateInput(item, depth + 1, maxDepth);
+      }
+    } else {
+      for (const v of Object.values(value)) {
+        validateInput(v, depth + 1, maxDepth);
+      }
+    }
+  }
+}
+
 export function canonicalStringify(value: unknown): string {
+  // Validate input for security
+  validateInput(value);
+
   if (typeof value === "bigint") {
     return JSON.stringify({ __bigint__: value.toString() });
   }
@@ -92,6 +124,15 @@ export function stringifyWithBigInt(value: unknown, spacing = 2): string {
 }
 
 export function signEvent(eventHash: string, signingKey: string): string {
+  if (!eventHash || typeof eventHash !== "string") {
+    throw new Error("Invalid event hash");
+  }
+  if (!signingKey || typeof signingKey !== "string" || signingKey.length === 0) {
+    throw new Error("Invalid signing key");
+  }
+  if (eventHash.length !== 64) {
+    throw new Error("Event hash must be 64 hex characters");
+  }
   return createHmac("sha256", signingKey).update(eventHash).digest("hex");
 }
 
@@ -183,12 +224,16 @@ export function hasCycles(events: Iterable<Event>): boolean {
   return false;
 }
 
-export function topologicalSort(events: Iterable<Event>): Event[] {
+export function topologicalSort(events: Iterable<Event>, maxDepth = 10000): Event[] {
   const eventMap = new Map<string, Event>();
   const inDegree = new Map<string, number>();
   const children = new Map<string, Set<string>>();
+  let totalEvents = 0;
 
   for (const event of events) {
+    if (totalEvents++ > maxDepth) {
+      throw new Error(`Topological sort exceeded max depth limit (${maxDepth})`);
+    }
     eventMap.set(event.id, event);
     inDegree.set(event.id, inDegree.get(event.id) ?? 0);
     children.set(event.id, children.get(event.id) ?? new Set());
@@ -280,8 +325,19 @@ export class DUS<TValue = Record<string, unknown>> {
   private readonly events = new Map<string, Event>();
   private frontier = new Set<string>();
   private state: State<TValue>;
+  private maxEvents = 100000; // Security limit on event count
 
   constructor(nodeId: string, reducer: Reducer<TValue>, options: DUSOptions<TValue>) {
+    if (!nodeId || typeof nodeId !== "string" || nodeId.length === 0) {
+      throw new Error("Invalid nodeId");
+    }
+    if (!options || typeof options !== "object") {
+      throw new Error("Invalid options");
+    }
+    if (!options.reducerVersion || typeof options.reducerVersion !== "string") {
+      throw new Error("Invalid reducerVersion");
+    }
+    
     this.nodeId = nodeId;
     this.reducer = reducer;
     this.reducerVersion = options.reducerVersion;
@@ -291,6 +347,13 @@ export class DUS<TValue = Record<string, unknown>> {
   }
 
   emit<TPayload>(type: string, payload: TPayload, options: EmitOptions = {}): Event<TPayload> {
+    if (!type || typeof type !== "string") {
+      throw new Error("Invalid event type");
+    }
+    if (this.events.size >= this.maxEvents) {
+      throw new Error(`Event limit exceeded (${this.maxEvents})`);
+    }
+
     const parents = [...(options.parents ?? [...this.frontier])].sort(compareEventIds);
     const lamport = nextLamport(this.events.values());
     const timestamp = options.timestamp ?? Date.now();
@@ -304,6 +367,7 @@ export class DUS<TValue = Record<string, unknown>> {
       vectorClock
     };
 
+    validateInput(payload);
     const hash = canonicalHash({ type, payload, parents, metadata });
     const event: Event<TPayload> = {
       id: hash,
@@ -320,6 +384,16 @@ export class DUS<TValue = Record<string, unknown>> {
   }
 
   accept(event: Event): void {
+    if (!event || typeof event !== "object") {
+      throw new Error("Invalid event object");
+    }
+    if (!event.id || typeof event.id !== "string") {
+      throw new Error("Invalid event id");
+    }
+    if (this.events.size >= this.maxEvents) {
+      throw new Error(`Event limit exceeded (${this.maxEvents})`);
+    }
+    
     if (this.events.has(event.id)) {
       return;
     }

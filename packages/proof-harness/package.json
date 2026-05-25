@@ -1,0 +1,13 @@
+{
+  "name": "@dus/proof-harness",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/packages/proof-harness/src/index.js",
+  "types": "dist/packages/proof-harness/src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  }
+}

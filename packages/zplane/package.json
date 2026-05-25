@@ -1,0 +1,31 @@
+{
+  "name": "@dus/zplane",
+  "version": "0.2.0",
+  "description": "Z plane: polyglot language interoperability layer for DUS. Enables seamless interop across TypeScript, Python, Go, Rust, and WASM.",
+  "type": "module",
+  "main": "dist/packages/zplane/src/index.js",
+  "types": "dist/packages/zplane/src/index.d.ts",
+  "keywords": [
+    "polyglot",
+    "interoperability",
+    "language-agnostic",
+    "deterministic",
+    "dus"
+  ],
+  "author": "DUS Contributors",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/packages/zplane/src/index.d.ts",
+      "import": "./dist/packages/zplane/src/index.js"
+    },
+    "./adapters": {
+      "types": "./dist/packages/zplane/src/adapters/index.d.ts",
+      "import": "./dist/packages/zplane/src/adapters/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/packages/zplane/src/runtime/index.d.ts",
+      "import": "./dist/packages/zplane/src/runtime/index.js"
+    }
+  }
+}
