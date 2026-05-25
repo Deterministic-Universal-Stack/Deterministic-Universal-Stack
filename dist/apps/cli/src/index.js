@@ -1,4 +1,4 @@
-import { DUS, canonicalHash } from "@dus/core";
+import { DUS, canonicalHash, stringifyWithBigInt } from "@dus/core";
 import { FileSystemEventStore } from "@dus/storage";
 import path from "node:path";
 const reducer = (state, event) => {
@@ -22,11 +22,11 @@ async function main() {
     runtime.emit("set", { key: "system", value: "deterministic" }, { timestamp: 1 });
     runtime.emit("set", { key: "replication", value: "causal" }, { timestamp: 2 });
     if (command === "replay") {
-        console.log(JSON.stringify(runtime.replay(), null, 2));
+        console.log(stringifyWithBigInt(runtime.replay(), 2));
         return;
     }
     if (command === "snapshot") {
-        console.log(JSON.stringify(runtime.snapshot(), null, 2));
+        console.log(stringifyWithBigInt(runtime.snapshot(), 2));
         return;
     }
     if (command === "persist") {
@@ -34,7 +34,7 @@ async function main() {
             rootDir: path.join(process.cwd(), ".tmp")
         });
         const log = await store.saveLog("cli-demo", "dus-cli@1", runtime.getEvents());
-        console.log(JSON.stringify(log, null, 2));
+        console.log(stringifyWithBigInt(log, 2));
         return;
     }
     console.log("Usage: npm run replay | tsx apps/cli/src/index.ts [replay|snapshot|persist]");

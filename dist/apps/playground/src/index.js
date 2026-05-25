@@ -1,4 +1,4 @@
-import { DUS, canonicalHash } from "@dus/core";
+import { DUS, canonicalHash, stringifyWithBigInt } from "@dus/core";
 const reducer = (state, event) => {
     const next = {
         entities: { ...state.value.entities },
@@ -51,5 +51,5 @@ dus.emit("link", {
     dst: "causal_log",
     relation: "depends_on"
 }, { timestamp: 3 });
-console.log(JSON.stringify(dus.snapshot(), null, 2));
+console.log(stringifyWithBigInt(dus.snapshot(), 2));
 //# sourceMappingURL=index.js.map
